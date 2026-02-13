@@ -216,9 +216,9 @@ FAILED: test_streaming_basic
 
 === Summary (7 days) ===
 Total runs: 105 (7 days x 15 tests)
-Passes: 99
-Failures: 6
-Pass rate: 94.3%
+Passes: 98
+Failures: 7
+Pass rate: 93.3%
 Flaky tests: test_return_policy (2 failures), test_order_lookup (2 failures),
              test_streaming_basic (3 failures)
 ```
@@ -259,3 +259,7 @@ Your plan will be reviewed against these criteria:
 | Prioritization | Most impactful work is scheduled first |
 | Practicality | Plan is achievable in one week by one tester |
 | Use of course frameworks | Session concepts are applied, not just mentioned |
+
+---
+
+> **Solutions:** See `solutions/06-solutions.md` (instructor only).

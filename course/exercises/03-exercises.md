@@ -98,3 +98,7 @@ After completing the audit, consider:
 - Did the existing tests skew toward any particular axis?
 - Are there any axes with zero coverage?
 - How would your prioritization change if ShopSmart handled financial transactions through the chatbot?
+
+---
+
+> **Solutions:** See `solutions/03-solutions.md` (instructor only).
