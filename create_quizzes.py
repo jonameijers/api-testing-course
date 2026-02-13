@@ -168,10 +168,10 @@ QUIZZES = [
                 "feedback": "Temperature controls randomness: 0.0 = nearly deterministic, 2.0 = highly creative/random.",
             },
             {
-                "text": "Structured output mode with strict: true achieves 100% schema conformance.",
+                "text": "In the ChatAssist API used in this course, structured output mode with strict: true is designed to enforce schema conformance.",
                 "type": "tf",
                 "correct": True,
-                "feedback": "With strict: true, the model is constrained to return valid JSON matching your schema exactly. This is the first line of defense for testability.",
+                "feedback": "For this course's ChatAssist spec, strict: true constrains responses to valid JSON matching your schema. This is the first line of defense for testability.",
             },
             {
                 "text": "When the model requests a tool call, what is the value of finish_reason?",
@@ -204,10 +204,10 @@ QUIZZES = [
                 "feedback": "Each streaming chunk contains a small delta.content fragment. You must concatenate all fragments to get the full response.",
             },
             {
-                "text": "Failed API requests that return errors still consume input tokens and incur costs.",
+                "text": "In this course's cost model, failed API requests can still consume input tokens and incur cost.",
                 "type": "tf",
                 "correct": True,
-                "feedback": "You pay to send the prompt even if the response fails. This is a hidden cost that catches new testers off guard.",
+                "feedback": "Prompt processing can still consume tokens even when a request fails. This is a common hidden cost in GenAI API testing.",
             },
             {
                 "text": "Why is model version pinning important for test stability?",
@@ -402,7 +402,7 @@ QUIZZES = [
                 "feedback": "Non-functional requirements are critical for GenAI APIs — latency varies with output length, costs scale with tokens, and concurrency hits rate limits.",
             },
             {
-                "text": "Which coverage gap is most commonly missed by teams new to GenAI API testing?",
+                "text": "A team has tests for completion and structured output, but no tests for streaming chunks, mid-stream errors, or chunk assembly. Which coverage gap is this?",
                 "type": "mc",
                 "options": [
                     "Basic authentication testing",
@@ -411,7 +411,7 @@ QUIZZES = [
                     "Checking HTTP status codes",
                 ],
                 "correct": 1,
-                "feedback": "Streaming tests are often missing entirely. Teams test single-shot completions but forget streaming, partial streams, mid-stream errors, and chunk assembly.",
+                "feedback": "This is a response-mode coverage gap: streaming behavior (including partial and error scenarios) is untested.",
             },
             {
                 "text": "A coverage matrix should be filled in once and never updated.",
@@ -444,7 +444,7 @@ QUIZZES = [
                 "feedback": "Flakes are intermittent by nature. Consistent failure across retries suggests a real regression, schema break, or infrastructure issue.",
             },
             {
-                "text": "Which failure category does a 429 'Too Many Requests' error fall into?",
+                "text": "In this course's triage model, a 429 'Too Many Requests' error is first classified under which broad failure category?",
                 "type": "mc",
                 "options": [
                     "Infrastructure/transport",
@@ -452,8 +452,8 @@ QUIZZES = [
                     "Contract/schema break",
                     "Model drift",
                 ],
-                "correct": 1,
-                "feedback": "429 errors are capacity/quota failures — you've exceeded rate limits or token quotas. Mitigation: exponential backoff with jitter.",
+                "correct": 0,
+                "feedback": "In the triage model, 429 is an infrastructure/transport-path error first; then you narrow root cause to capacity/quota (rate or token limits).",
             },
             {
                 "text": "Model drift means the model's behavior changes over time, potentially degrading quality even without any code changes.",
