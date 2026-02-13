@@ -116,13 +116,6 @@ Rank the 8 failures by urgency. Which ones need immediate attention? Which can w
 
 Pick two failures that you classified as flakiness. Rewrite the assertion to be more resilient without hiding real bugs. Explain what you changed and why.
 
-### Solution Hints
-
-- Failure 2: Look carefully at what changed on Friday. Could an edit to the system prompt have broken the tool calling behavior?
-- Failure 3: The model version changed. What does the decision tree say about version changes?
-- Failure 5: This is a borderline content scenario. The safety filter is not consistent with borderline prompts.
-- Failure 7: Three consistent failures with a recent infrastructure change. What does that suggest?
-
 ---
 
 ## Exercise 2: Assertion Resilience Workshop (Optional, 10 min)
@@ -170,3 +163,7 @@ For each assertion:
 - Is there ever a case where exact match (Assertion A style) is the right choice for GenAI API output?
 - How strict is "too strict" for a similarity threshold? What is a reasonable starting point?
 - What is the risk of making assertions too lenient?
+
+---
+
+> **Solutions:** See `solutions/04-solutions.md` (instructor only).
