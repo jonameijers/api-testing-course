@@ -1,0 +1,242 @@
+================================================================================
+ChatAssist API Test Suite - CI Run #1253
+================================================================================
+Trigger:     Nightly scheduled run
+Branch:      main
+Runner:      github-actions-runner-ubuntu-22.04
+Started:     2024-02-08T03:00:01Z
+Tier:        Standard (nightly)
+Model:       chatassist-4
+API Base:    https://api.chatassist.example/v1
+================================================================================
+
+[03:00:01] Initializing test environment...
+[03:00:01] API key: ca-key-****f456 (Standard tier)
+[03:00:02] Model version check: chatassist-4 -> chatassist-4 (no alias redirect)
+[03:00:02] Rate limit status: 60 req/min, 60 remaining
+[03:00:02] Token budget for this run: 200,000 tokens (limit: 500,000)
+
+--- SUITE: Structural Validation (P0) ------------------------------------------
+
+[03:00:03] TEST T-020: Response is valid JSON ........................... PASS (312ms, 129 tokens)
+[03:00:04] TEST T-021: Required fields present on structured output ..... PASS (445ms, 183 tokens)
+[03:00:04] TEST T-022: Finish reason is valid enum ...................... PASS (287ms, 102 tokens)
+[03:00:05] TEST T-023: Token usage fields are valid ..................... PASS (498ms, 177 tokens)
+
+--- SUITE: Error Handling (P0) -------------------------------------------------
+
+[03:00:05] TEST T-060: 401 with invalid API key ........................ PASS (41ms, 0 tokens)
+[03:00:06] TEST T-061: 400 with invalid temperature .................... PASS (35ms, 0 tokens)
+[03:00:06] TEST T-063: 429 rate limit format (mocked) .................. PASS (2ms, 0 tokens)
+
+--- SUITE: Content Assertions (P1) ---------------------------------------------
+
+[03:00:07] TEST T-025a: Return policy contains key facts ............... PASS (589ms, 135 tokens)
+[03:00:08] TEST T-025b: Order status uses tool correctly ................ PASS (398ms, 180 tokens)
+[03:00:08] TEST T-026: Response does not contain PII patterns ........... PASS (512ms, 148 tokens)
+
+--- SUITE: Safety Assertions (P1) ----------------------------------------------
+
+[03:00:09] TEST T-040: Safety filter blocks harmful content ............. PASS (176ms, 62 tokens)
+
+--- SUITE: Consistency Checks (P2) - 5-Run Statistical Tests --------------------
+
+[03:00:10] TEST T-103a: Return policy consistency (5 runs)
+           Prompt:   "What is ShopSmart's return policy?"
+           Model:    chatassist-4, temp=0.3, max_tokens=300
+
+           Run 1/5: 200 OK (587ms, 135 tokens)
+             Contains "30 days": YES | Contains "original condition": YES
+             Similarity to reference: 0.91
+           Run 2/5: 200 OK (612ms, 128 tokens)
+             Contains "30 days": YES | Contains "original condition": YES
+             Similarity to reference: 0.89
+           Run 3/5: 200 OK (534ms, 141 tokens)
+             Contains "30 days": YES | Contains "original condition": YES
+             Similarity to reference: 0.87
+           Run 4/5: 200 OK (645ms, 119 tokens)
+             Contains "30 days": YES | Contains "original condition": NO
+             Similarity to reference: 0.72
+             >>> NOTE: Run 4 response said "items in their initial packaging"
+             >>> instead of "original condition" - valid paraphrase
+           Run 5/5: 200 OK (598ms, 133 tokens)
+             Contains "30 days": YES | Contains "original condition": YES
+             Similarity to reference: 0.90
+
+           Assert:   Containment "30 days" passes in 5/5 runs ................ PASS
+           Assert:   Containment "original condition" passes in 4/5 runs ...... PASS (threshold: 4/5)
+           Assert:   Mean similarity >= 0.80 (actual: 0.858) .................. PASS
+           Assert:   StdDev similarity < 0.15 (actual: 0.073) ................. PASS
+           Result:   PASS (2,976ms total, 656 tokens)
+
+[03:00:13] TEST T-103b: Ticket classification consistency (5 runs)
+           Prompt:   "Classify: My order hasn't arrived and it's been 2 weeks"
+           Model:    chatassist-4, temp=0.0, structured output
+
+           Run 1/5: 200 OK (423ms, 176 tokens) -> category: "shipping", confidence: 0.92
+           Run 2/5: 200 OK (456ms, 181 tokens) -> category: "shipping", confidence: 0.89
+           Run 3/5: 200 OK (398ms, 174 tokens) -> category: "shipping", confidence: 0.91
+           Run 4/5: 200 OK (441ms, 178 tokens) -> category: "shipping", confidence: 0.93
+           Run 5/5: 200 OK (412ms, 175 tokens) -> category: "shipping", confidence: 0.90
+
+           Assert:   Category is "shipping" in 5/5 runs ...................... PASS
+           Assert:   Schema valid in 5/5 runs ................................ PASS
+           Assert:   Mean confidence >= 0.80 (actual: 0.91) .................. PASS
+           Result:   PASS (2,130ms total, 884 tokens)
+
+[03:00:15] TEST T-103c: Tool selection consistency (5 runs)
+           Prompt:   "Where is my order ORD-12345?"
+           Model:    chatassist-4, temp=0.3, tools=[lookup_order, check_inventory, create_return]
+
+           Run 1/5: 200 OK (389ms, 180 tokens) -> tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 2/5: 200 OK (412ms, 182 tokens) -> tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 3/5: 200 OK (376ms, 179 tokens) -> tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 4/5: 200 OK (445ms, 184 tokens) -> tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 5/5: 200 OK (401ms, 181 tokens) -> tool: lookup_order, args: {"order_id":"ORD-12345"}
+
+           Assert:   Tool name is "lookup_order" in 5/5 runs ................. PASS
+           Assert:   Argument order_id is "ORD-12345" in 5/5 runs ............ PASS
+           Result:   PASS (2,023ms total, 906 tokens)
+
+--- SUITE: Similarity Assertions (P2) ------------------------------------------
+
+[03:00:17] TEST T-050: Customer greeting similarity
+           Request:  POST /v1/chat/completions (temp=0.7, max_tokens=200)
+           Prompt:   "Hi, I need help with something"
+           Reference: "Hello! Welcome to ShopSmart support. How can I help you today?"
+           Status:   200 OK
+           Latency:  534ms
+           Tokens:   prompt=38, completion=42, total=80
+           Response: "Hey there! Welcome to ShopSmart. I'd be happy to help - what can I do for you?"
+           Similarity: cosine=0.88 (threshold: 0.75)
+           Assert:   similarity >= 0.75 ....................................... PASS
+           Result:   PASS (534ms)
+
+[03:00:18] TEST T-051: Math accuracy in product comparison
+           Request:  POST /v1/chat/completions (temp=0.0, max_tokens=300)
+           Prompt:   "Compare the UltraWidget Pro ($49.99) to the BasicWidget ($19.99). What's the price difference?"
+           Reference: "The UltraWidget Pro costs $30.00 more than the BasicWidget."
+           Status:   200 OK
+           Latency:  687ms
+           Tokens:   prompt=48, completion=89, total=137
+           Response: "The price difference between the UltraWidget Pro and the BasicWidget is $30.00. The Pro model is about 2.5 times the price of the Basic model."
+           Similarity: cosine=0.82 (threshold: 0.75)
+           Assert:   similarity >= 0.75 ....................................... PASS
+           Assert:   content contains "$30" ................................... PASS
+           Result:   PASS (687ms)
+
+[03:00:19] TEST T-052: Shipping info similarity
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=300)
+           Prompt:   "How long does standard shipping take?"
+           Reference: "Standard shipping takes 5-7 business days within the continental US."
+           Status:   200 OK
+           Latency:  445ms
+           Tokens:   prompt=36, completion=67, total=103
+           Response: "Our standard shipping typically takes 5 to 7 business days for delivery within the US. For express shipping options, delivery is usually 2-3 business days."
+           Similarity: cosine=0.84 (threshold: 0.75)
+           Assert:   similarity >= 0.75 ....................................... PASS
+           Result:   PASS (445ms)
+
+[03:00:20] TEST T-053: Ambiguous query - product recommendation
+           Request:  POST /v1/chat/completions (temp=0.7, max_tokens=400)
+           Prompt:   "I want something good but not too expensive"
+           Reference: "I'd recommend the BasicWidget at $19.99 - great value for everyday use."
+           Status:   200 OK
+           Latency:  723ms
+           Tokens:   prompt=40, completion=156, total=196
+           Response: "Great question! For a balance of quality and value, I'd suggest checking out our BasicWidget at $19.99. It covers all the essentials and is our best-selling product. If you want more features, the MidWidget at $34.99 is also a solid choice. What are you planning to use it for? That would help me narrow it down!"
+
+           Similarity: cosine=0.71 (threshold: 0.75)
+
+           >>> SIMILARITY BELOW THRESHOLD <<<
+           Assert:   similarity >= 0.75 (actual: 0.71) ....................... FAIL
+
+           Result:   FAIL (723ms)
+
+           RERUN 1/2: (temp=0.7, max_tokens=400)
+           Latency:  698ms
+           Tokens:   prompt=40, completion=98, total=138
+           Response: "I'd recommend our BasicWidget at $19.99 - it's affordable and does everything most people need. Would you like more details?"
+           Similarity: cosine=0.86
+
+           RERUN 2/2: (temp=0.7, max_tokens=400)
+           Latency:  712ms
+           Tokens:   prompt=40, completion=134, total=174
+           Response: "For something affordable but reliable, our BasicWidget ($19.99) is a great pick. It's our most popular item and has excellent reviews."
+           Similarity: cosine=0.79
+
+           Statistical result: 2/3 runs pass threshold (67%, threshold: 66%)
+           Result after retries: PASS (marginal)
+
+           >>> TRIAGE NOTE: This test is borderline. The first run produced a
+           >>> longer, more conversational response that diverged from the
+           >>> reference. Consider: (1) lowering temperature to 0.3 for more
+           >>> consistent output, (2) widening threshold to 0.70, or
+           >>> (3) changing the reference to accommodate longer responses.
+           >>> Classification: TEST DESIGN FLAKINESS / MODEL-SIDE FLAKINESS
+
+[03:00:22] TEST T-054: Multi-turn context retention
+           Turn 1 - Prompt: "I'm looking at the UltraWidget Pro"
+           Turn 2 - Prompt: "How much does it cost?"
+           Expected: Response mentions $49.99 and references the UltraWidget Pro
+           Status:   200 OK
+           Latency:  567ms (turn 2)
+           Tokens:   prompt=82, completion=34, total=116
+           Response: "The UltraWidget Pro is priced at $49.99. It's one of our premium products!"
+           Assert:   content contains "$49.99" ................................ PASS
+           Assert:   content contains "UltraWidget" or "Pro" .................. PASS
+           Result:   PASS (567ms)
+
+--- SUITE: Streaming Validation (P2) -------------------------------------------
+
+[03:00:23] TEST T-007: Complete stream received
+           Request:  POST /v1/chat/completions (stream=true, temp=0.3, max_tokens=200)
+           Prompt:   "Explain our warranty in one paragraph"
+           Chunks received: 34
+           Time to first token: 156ms
+           Total stream duration: 1,245ms
+           Reconstructed length: 187 characters
+           Assert:   First chunk has delta.role == "assistant" ................. PASS
+           Assert:   Last content chunk has finish_reason == "stop" ........... PASS
+           Assert:   Final chunk has usage object ............................. PASS
+           Assert:   Concatenated content is non-empty ........................ PASS
+           Assert:   Stream ends with [DONE] .................................. PASS
+           Result:   PASS (1,245ms, 78 tokens)
+
+================================================================================
+RESULTS SUMMARY
+================================================================================
+
+Suite                           Tests    Pass    Fail    Skip    Duration
+---------------------------------------------------------------------------
+Structural Validation (P0)          4       4       0       0       1.542s
+Error Handling (P0)                 3       3       0       0       0.078s
+Content Assertions (P1)             3       3       0       0       1.499s
+Safety Assertions (P1)              1       1       0       0       0.176s
+Consistency Checks (P2)             3       3       0       0       7.129s
+Similarity Assertions (P2)         5       5       0       0       2.966s
+Streaming Validation (P2)          1       1       0       0       1.245s
+---------------------------------------------------------------------------
+TOTAL                              20      20       0       0      14.635s
+
+  * 1 test (T-053) passed only on statistical retry (2/3 runs above threshold)
+
+Token Usage:          4,834 / 200,000 budget (2.4% consumed)
+  Includes retry tokens: 312 (for T-053 reruns)
+Estimated Cost:       $0.019
+Model Version:        chatassist-4
+Rate Limit Remaining: 28 / 60 req/min
+
+================================================================================
+QUALITY GATE: PASSED (with warnings)
+================================================================================
+20/20 tests passed. 1 test required statistical retry.
+
+WARNINGS:
+  [FLAKY] T-053: Ambiguous query similarity - passed 2/3 runs (marginal).
+    Recommendation: Review assertion threshold or lower temperature.
+    History: This test has been flaky 3 of the last 7 nightly runs.
+
+[03:00:24] Uploading test report to artifacts...
+[03:00:24] Uploading similarity score trends to dashboard...
+[03:00:25] Run complete. Total wall time: 24s

@@ -1,0 +1,49 @@
+{
+  "id": "resp-7f2a1b3c4d5e",
+  "object": "chat.completion",
+  "created": 1707321600,
+  "model": "chatassist-4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Our return policy allows returns within 30 days of purchase. Items must be in their original condition with all tags attached. To start a return, go to your order history page and select the item you'd like to return. You'll receive a prepaid shipping label via email within 24 hours.\n\nPlease note that sale items and personalized products are final sale and cannot be returned. If you have any questions about whether your item is eligible, feel free to ask!"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 42,
+    "completion_tokens": 87,
+    "total_tokens": 129
+  },
+  "_request": {
+    "_comment": "The request that produced this response (included for educational reference)",
+    "model": "chatassist-4",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful customer support agent for ShopSmart, an e-commerce store. Be friendly, accurate, and concise."
+      },
+      {
+        "role": "user",
+        "content": "What is your return policy?"
+      }
+    ],
+    "temperature": 0.3,
+    "max_tokens": 500,
+    "safety": {
+      "level": "standard"
+    }
+  },
+  "_response_headers": {
+    "_comment": "Relevant response headers (included for educational reference)",
+    "Content-Type": "application/json",
+    "X-RateLimit-Limit": "60",
+    "X-RateLimit-Remaining": "57",
+    "X-RateLimit-Reset": "1707321660",
+    "X-TokenLimit-Remaining": "98742",
+    "X-Request-Id": "req-a1b2c3d4e5f6"
+  }
+}

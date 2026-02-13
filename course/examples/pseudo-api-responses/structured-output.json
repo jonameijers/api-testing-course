@@ -1,0 +1,80 @@
+{
+  "id": "resp-8e3b2c4d5f6a",
+  "object": "chat.completion",
+  "created": 1707321700,
+  "model": "chatassist-4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"category\":\"returns\",\"confidence\":0.94,\"priority\":\"normal\",\"summary\":\"Customer wants to return a broken UltraWidget Pro purchased last Tuesday for $49.99\",\"requires_tool_call\":true,\"suggested_tool\":\"lookup_order\"}"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 135,
+    "completion_tokens": 48,
+    "total_tokens": 183
+  },
+  "_request": {
+    "_comment": "The request that produced this response (included for educational reference)",
+    "model": "chatassist-4",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Classify the incoming customer support ticket into a category and extract key information."
+      },
+      {
+        "role": "user",
+        "content": "I bought the UltraWidget Pro for $49.99 last Tuesday and it arrived broken. I want to return it."
+      }
+    ],
+    "temperature": 0.0,
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "ticket_classification",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": ["returns", "shipping", "billing", "product_info", "other"]
+            },
+            "confidence": {
+              "type": "number"
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "normal", "high", "urgent"]
+            },
+            "summary": {
+              "type": "string"
+            },
+            "requires_tool_call": {
+              "type": "boolean"
+            },
+            "suggested_tool": {
+              "type": "string",
+              "enum": ["lookup_order", "check_inventory", "create_return", "none"]
+            }
+          },
+          "required": ["category", "confidence", "priority", "summary", "requires_tool_call", "suggested_tool"],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "_parsed_content": {
+    "_comment": "The content field parsed as JSON (included for educational reference)",
+    "category": "returns",
+    "confidence": 0.94,
+    "priority": "normal",
+    "summary": "Customer wants to return a broken UltraWidget Pro purchased last Tuesday for $49.99",
+    "requires_tool_call": true,
+    "suggested_tool": "lookup_order"
+  }
+}

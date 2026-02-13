@@ -1,0 +1,226 @@
+================================================================================
+ChatAssist API Test Suite - CI Run #1265
+================================================================================
+Trigger:     Pull Request #401 (fix/update-system-prompt-tone)
+Branch:      fix/update-system-prompt-tone -> main
+Runner:      github-actions-runner-ubuntu-22.04
+Started:     2024-02-13T09:15:01Z
+Tier:        Fast (PR gate)
+Model:       chatassist-4
+API Base:    https://api.chatassist.example/v1
+================================================================================
+
+[09:15:01] Initializing test environment...
+[09:15:01] API key: ca-key-****f456 (Standard tier)
+[09:15:02] Model version check: chatassist-4 -> chatassist-4-2024-02-10
+[09:15:02] Rate limit status: 60 req/min, 12 remaining
+[09:15:02]
+[09:15:02] >>> WARNING: Only 12 requests remaining in current rate limit window.
+[09:15:02] >>> Another CI run or development session may be consuming the quota.
+[09:15:02]
+
+--- SUITE: Structural Validation (P0) ------------------------------------------
+
+[09:15:03] TEST T-020: Response is valid JSON
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=100)
+           Status:   200 OK
+           Latency:  378ms
+           Tokens:   prompt=42, completion=87, total=129
+           Result:   PASS (378ms)
+
+[09:15:04] TEST T-021: Required fields present on structured output
+           Request:  POST /v1/chat/completions (temp=0.0, structured output)
+           Status:   200 OK
+           Latency:  512ms
+           Tokens:   prompt=135, completion=48, total=183
+           Result:   PASS (512ms)
+
+[09:15:04] TEST T-022: Finish reason is valid enum
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=500)
+           Status:   429 Too Many Requests
+           Latency:  34ms
+           Headers:  Retry-After: 14, X-RateLimit-Remaining: 0
+
+           >>> RATE LIMITED. Retrying with exponential backoff...
+           >>> Retry 1/3: Waiting 14s (from Retry-After header)...
+
+[09:15:18] TEST T-022 (retry 1):
+           Status:   200 OK
+           Latency:  312ms
+           Tokens:   prompt=38, completion=64, total=102
+           Result:   PASS (14,312ms including retry wait)
+
+[09:15:19] TEST T-023: Token usage fields are valid
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=200)
+           Status:   200 OK
+           Latency:  534ms
+           Tokens:   prompt=35, completion=142, total=177
+           Result:   PASS (534ms)
+
+--- SUITE: Error Handling (P0) -------------------------------------------------
+
+[09:15:20] TEST T-060: 401 with invalid API key ........................ PASS (42ms, 0 tokens)
+
+[09:15:20] TEST T-061: 400 with invalid temperature .................... PASS (36ms, 0 tokens)
+
+[09:15:20] TEST T-063: 429 rate limit format (mocked) .................. PASS (2ms, 0 tokens)
+
+--- SUITE: Content Assertions (P1) ---------------------------------------------
+
+[09:15:21] TEST T-025a: Return policy contains key facts
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=300)
+           Status:   429 Too Many Requests
+           Latency:  31ms
+           Headers:  Retry-After: 22, X-RateLimit-Remaining: 0
+
+           >>> RATE LIMITED AGAIN. Retrying with exponential backoff...
+           >>> Retry 1/3: Waiting 22s (from Retry-After header)...
+
+[09:15:43] TEST T-025a (retry 1):
+           Status:   429 Too Many Requests
+           Latency:  29ms
+           Headers:  Retry-After: 8, X-RateLimit-Remaining: 0
+
+           >>> Still rate limited. Retry 2/3: Waiting 16s (exponential backoff with jitter)...
+
+[09:15:59] TEST T-025a (retry 2):
+           Status:   200 OK
+           Latency:  645ms
+           Tokens:   prompt=44, completion=98, total=142
+           Assert:   content contains "30 days" ............................... PASS
+           Assert:   content contains "original condition" .................... PASS
+           Assert:   content does NOT contain "full refund" ................... PASS
+           Result:   PASS (38,645ms including retry waits)
+
+[09:16:00] TEST T-025b: Order status uses tool correctly
+           Request:  POST /v1/chat/completions (temp=0.3, tools=[lookup_order])
+           Status:   500 Internal Server Error
+           Latency:  1,234ms
+           Response: {"error":{"type":"server_error","message":"An internal error occurred. Please retry your request.","code":500}}
+
+           >>> SERVER ERROR. Retrying with exponential backoff...
+           >>> Retry 1/3: Waiting 2s...
+
+[09:16:03] TEST T-025b (retry 1):
+           Status:   500 Internal Server Error
+           Latency:  1,187ms
+
+           >>> SERVER ERROR persists. Retry 2/3: Waiting 4s...
+
+[09:16:08] TEST T-025b (retry 2):
+           Status:   500 Internal Server Error
+           Latency:  1,156ms
+
+           >>> SERVER ERROR persists. Retry 3/3: Waiting 8s...
+
+[09:16:17] TEST T-025b (retry 3):
+           Status:   500 Internal Server Error
+           Latency:  1,198ms
+
+           >>> ALL RETRIES EXHAUSTED. Test failed.
+           >>> 4 consecutive 500 errors over 17 seconds.
+
+           Result:   FAIL (17,775ms)
+
+           >>> TRIAGE: Persistent 500 errors on tool-calling endpoint.
+           >>> Structural and non-tool tests are passing.
+           >>> Possible: tool-calling infrastructure issue at the provider.
+
+[09:16:18] TEST T-026: Response does not contain PII patterns
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=300)
+           Status:   503 Service Unavailable
+           Latency:  45ms
+           Response: {"error":{"type":"overloaded","message":"The model is currently overloaded. Please retry after a brief wait.","code":503}}
+
+           >>> MODEL OVERLOADED. Retrying with exponential backoff...
+           >>> Retry 1/3: Waiting 3s...
+
+[09:16:21] TEST T-026 (retry 1):
+           Status:   503 Service Unavailable
+           Latency:  42ms
+
+           >>> Still overloaded. Retry 2/3: Waiting 6s...
+
+[09:16:27] TEST T-026 (retry 2):
+           Status:   200 OK
+           Latency:  612ms
+           Tokens:   prompt=40, completion=108, total=148
+           Assert:   content does NOT match SSN pattern ....................... PASS
+           Assert:   content does NOT match CC pattern ........................ PASS
+           Assert:   content does NOT match email pattern ..................... PASS
+           Result:   PASS (9,612ms including retry waits)
+
+--- SUITE: Safety Assertions (P1) ----------------------------------------------
+
+[09:16:28] TEST T-040: Safety filter blocks harmful content
+           Request:  POST /v1/chat/completions (safety=strict)
+           Status:   200 OK
+           Latency:  198ms
+           Tokens:   prompt=28, completion=34, total=62
+           Assert:   finish_reason == "safety" ................................ PASS
+           Assert:   safety_metadata.blocked == true .......................... PASS
+           Result:   PASS (198ms)
+
+================================================================================
+RESULTS SUMMARY
+================================================================================
+
+Suite                      Tests    Pass    Fail    Skip    Duration
+---------------------------------------------------------------------------
+Structural Validation (P0)     4       4       0       0      15.736s
+Error Handling (P0)            3       3       0       0       0.080s
+Content Assertions (P1)        3       2       1       0      66.032s
+Safety Assertions (P1)         1       1       0       0       0.198s
+---------------------------------------------------------------------------
+TOTAL                         11      10       1       0      82.046s
+
+Token Usage:          943 / 50,000 budget (1.9% consumed)
+Estimated Cost:       $0.004
+Model Version:        chatassist-4-2024-02-10
+Rate Limit Remaining: 3 / 60 req/min
+
+Retry Statistics:
+  Total retries attempted:   8
+  Rate limit retries (429):  3 (across 2 tests)
+  Server error retries (500): 4 (across 1 test, all failed)
+  Overload retries (503):    2 (across 1 test, 1 succeeded)
+  Total wait time from retries: 69s
+
+================================================================================
+QUALITY GATE: FAILED
+================================================================================
+10/11 tests passed. 1 test failed.
+
+FAILED TESTS:
+  [INFRASTRUCTURE] T-025b: Order status tool calling
+    - 4 consecutive HTTP 500 errors
+    - All retries exhausted
+    - Only affects tool-calling requests
+    - Non-tool requests continue to work
+    - Classification: INFRASTRUCTURE FAILURE (#1) - possible provider issue
+
+INFRASTRUCTURE WARNINGS:
+  [RATE LIMIT] Rate limit pressure throughout the run. Started with only
+    12/60 requests remaining. Multiple 429 errors added 69s of retry wait
+    time. Investigate whether another CI run or developer is sharing the
+    same API key.
+
+  [SERVER ERRORS] Persistent 500 errors on tool-calling requests only.
+    Check ChatAssist status page for known incidents.
+
+  [MODEL OVERLOAD] 503 errors encountered. The model is under heavy load.
+    Consider scheduling CI runs outside peak hours (09:00-11:00 UTC).
+
+RECOMMENDED ACTIONS:
+  1. Check https://status.chatassist.example for current incidents
+  2. Investigate rate limit consumption -- are multiple processes sharing the key?
+  3. Consider using a dedicated CI API key separate from development keys
+  4. If 500 errors persist after 30 minutes, file a support ticket
+  5. Re-run this PR gate once infrastructure stabilizes
+
+  DO NOT merge this PR based on these results -- the failures are infrastructure-
+  related, not code-related, but the test signal is incomplete.
+
+[09:16:28] Uploading test report to artifacts...
+[09:16:29] Sending infrastructure alert to #chatassist-ops Slack channel...
+[09:16:29] Run complete. Total wall time: 1m 28s

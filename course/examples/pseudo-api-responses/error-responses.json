@@ -1,0 +1,208 @@
+{
+  "_comment": "Collection of error responses from the ChatAssist API. Each entry includes the HTTP status code, response body, response headers where relevant, and the request that triggered the error.",
+
+  "errors": [
+    {
+      "_label": "401 Unauthorized - Invalid API Key",
+      "_http_status": 401,
+      "response_body": {
+        "error": {
+          "type": "authentication_error",
+          "message": "Invalid API key. Verify your API key at https://dashboard.chatassist.example/keys",
+          "code": 401
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-INVALID000000000",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Hello" }]
+        }
+      },
+      "_testing_notes": "This error should be caught immediately. No tokens are consumed. Assert: status == 401, error.type == 'authentication_error'."
+    },
+
+    {
+      "_label": "401 Unauthorized - Missing API Key",
+      "_http_status": 401,
+      "response_body": {
+        "error": {
+          "type": "authentication_error",
+          "message": "No API key provided. Include your key in the Authorization header: 'Authorization: Bearer YOUR_API_KEY'",
+          "code": 401
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Hello" }]
+        }
+      },
+      "_testing_notes": "Common when environment variable is not set in CI/CD. Check that secrets are configured."
+    },
+
+    {
+      "_label": "429 Too Many Requests - Rate Limited",
+      "_http_status": 429,
+      "response_body": {
+        "error": {
+          "type": "rate_limit_error",
+          "message": "Rate limit exceeded. Try again in 8 seconds.",
+          "code": 429
+        }
+      },
+      "response_headers": {
+        "Retry-After": "8",
+        "X-RateLimit-Limit": "60",
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": "1707322268"
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Quick question" }]
+        }
+      },
+      "_testing_notes": "Implement retry with exponential backoff + jitter. Parse Retry-After header. This commonly happens when running test suites without rate limiting between requests."
+    },
+
+    {
+      "_label": "429 Too Many Requests - Daily Token Quota Exceeded",
+      "_http_status": 429,
+      "response_body": {
+        "error": {
+          "type": "quota_exceeded",
+          "message": "Daily token quota exceeded. Resets at midnight UTC. Current usage: 2,000,000 / 2,000,000 tokens.",
+          "code": 429
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Hello" }]
+        }
+      },
+      "_testing_notes": "Different from rate limiting. Cannot retry -- must wait for quota reset. Indicates the test suite may be consuming too many tokens. Review test suite cost management."
+    },
+
+    {
+      "_label": "400 Bad Request - Invalid Parameter",
+      "_http_status": 400,
+      "response_body": {
+        "error": {
+          "type": "invalid_request",
+          "message": "temperature must be between 0.0 and 2.0, got 3.5",
+          "code": 400,
+          "param": "temperature"
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Hello" }],
+          "temperature": 3.5
+        }
+      },
+      "_testing_notes": "The error.param field tells you exactly which parameter is wrong. This is a test configuration issue, not an API bug."
+    },
+
+    {
+      "_label": "400 Bad Request - Context Window Exceeded",
+      "_http_status": 400,
+      "response_body": {
+        "error": {
+          "type": "invalid_request",
+          "message": "This request would require 135000 tokens, which exceeds the maximum context length of 128000 for model chatassist-4.",
+          "code": 400,
+          "param": "messages"
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [
+            { "role": "system", "content": "You are a helpful assistant." },
+            { "role": "user", "content": "[VERY LONG PROMPT - approximately 130000 tokens of text...]" }
+          ]
+        }
+      },
+      "_testing_notes": "Input tokens are still charged even though the request failed. Use a model with a larger context window, or truncate the input."
+    },
+
+    {
+      "_label": "500 Internal Server Error",
+      "_http_status": 500,
+      "response_body": {
+        "error": {
+          "type": "server_error",
+          "message": "An internal error occurred. Please retry your request. If the problem persists, contact support@chatassist.example",
+          "code": 500
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Summarize the quarterly report." }]
+        }
+      },
+      "_testing_notes": "Transient error. Retry with exponential backoff. If persistent, check provider status page. Input tokens may have been consumed."
+    },
+
+    {
+      "_label": "503 Service Unavailable - Model Overloaded",
+      "_http_status": 503,
+      "response_body": {
+        "error": {
+          "type": "overloaded",
+          "message": "The model is currently overloaded. Please retry after a brief wait.",
+          "code": 503
+        }
+      },
+      "_request": {
+        "url": "POST /v1/chat/completions",
+        "headers": {
+          "Authorization": "Bearer ca-key-abc123def456",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "chatassist-4",
+          "messages": [{ "role": "user", "content": "Generate a product description." }]
+        }
+      },
+      "_testing_notes": "The model is under heavy load. Retry with backoff. Consider falling back to chatassist-4-mini if available. More common during peak hours."
+    }
+  ]
+}

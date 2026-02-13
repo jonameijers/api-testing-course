@@ -1,0 +1,83 @@
+{
+  "_comment": "This response demonstrates a truncated output caused by hitting the max_tokens limit. The content field contains partially valid JSON that will fail to parse. This is a common failure mode when using structured output with an insufficient max_tokens value.",
+
+  "id": "resp-df8a7b9c0d1e",
+  "object": "chat.completion",
+  "created": 1707322200,
+  "model": "chatassist-4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"category\":\"returns\",\"confidence\":0.91,\"priority\":\"normal\",\"summary\":\"Customer purchased UltraWidget Pro for $49.99 and received it with a cracked screen. They want"
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 135,
+    "completion_tokens": 40,
+    "total_tokens": 175
+  },
+  "_request": {
+    "_comment": "max_tokens was set too low for the structured output schema, causing truncation",
+    "model": "chatassist-4",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Classify the incoming customer support ticket into a category and extract key information."
+      },
+      {
+        "role": "user",
+        "content": "I bought the UltraWidget Pro for $49.99 last Tuesday and it arrived with a cracked screen. I want a replacement or a full refund. My order number is ORD-78542 and I've already taken photos of the damage."
+      }
+    ],
+    "temperature": 0.0,
+    "max_tokens": 40,
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "ticket_classification",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": ["returns", "shipping", "billing", "product_info", "other"]
+            },
+            "confidence": { "type": "number" },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "normal", "high", "urgent"]
+            },
+            "summary": { "type": "string" },
+            "requires_tool_call": { "type": "boolean" },
+            "suggested_tool": {
+              "type": "string",
+              "enum": ["lookup_order", "check_inventory", "create_return", "none"]
+            }
+          },
+          "required": ["category", "confidence", "priority", "summary", "requires_tool_call", "suggested_tool"],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "_testing_notes": {
+    "_comment": "Key points for exercise discussion",
+    "what_went_wrong": "max_tokens (40) was too low for the schema to be fully generated. The model ran out of tokens mid-JSON.",
+    "how_to_detect": [
+      "finish_reason == 'length' (not 'stop') indicates truncation",
+      "JSON.parse(content) will throw a SyntaxError",
+      "completion_tokens == max_tokens confirms the limit was hit"
+    ],
+    "how_to_fix": [
+      "Increase max_tokens to accommodate the full schema output (recommend 2-3x the expected output size)",
+      "Always check finish_reason before parsing content",
+      "Add a try/catch around JSON.parse with a clear error message"
+    ],
+    "partial_json_content": "{\"category\":\"returns\",\"confidence\":0.91,\"priority\":\"normal\",\"summary\":\"Customer purchased UltraWidget Pro for $49.99 and received it with a cracked screen. They want"
+  }
+}

@@ -1,0 +1,243 @@
+================================================================================
+ChatAssist API Test Suite - CI Run #1261
+================================================================================
+Trigger:     Nightly scheduled run
+Branch:      main
+Runner:      github-actions-runner-ubuntu-22.04
+Started:     2024-02-12T03:00:01Z
+Tier:        Standard (nightly)
+Model:       chatassist-4
+API Base:    https://api.chatassist.example/v1
+================================================================================
+
+[03:00:01] Initializing test environment...
+[03:00:01] API key: ca-key-****f456 (Standard tier)
+[03:00:02] Model version check: chatassist-4 -> chatassist-4 (no alias redirect)
+[03:00:02]
+[03:00:02] >>> WARNING: response.model returned "chatassist-4-2024-02-10"
+[03:00:02] >>> Previous nightly run (CI #1258, 2024-02-11) returned "chatassist-4-2024-01-15"
+[03:00:02] >>> MODEL VERSION HAS CHANGED since last successful run.
+[03:00:02]
+[03:00:02] Rate limit status: 60 req/min, 60 remaining
+[03:00:02] Token budget for this run: 200,000 tokens (limit: 500,000)
+
+--- SUITE: Structural Validation (P0) ------------------------------------------
+
+[03:00:03] TEST T-020: Response is valid JSON ........................... PASS (356ms, 138 tokens)
+[03:00:04] TEST T-021: Required fields present on structured output ..... PASS (478ms, 189 tokens)
+[03:00:04] TEST T-022: Finish reason is valid enum ...................... PASS (302ms, 108 tokens)
+[03:00:05] TEST T-023: Token usage fields are valid ..................... PASS (523ms, 184 tokens)
+
+--- SUITE: Error Handling (P0) -------------------------------------------------
+
+[03:00:05] TEST T-060: 401 with invalid API key ........................ PASS (43ms, 0 tokens)
+[03:00:06] TEST T-061: 400 with invalid temperature .................... PASS (37ms, 0 tokens)
+[03:00:06] TEST T-063: 429 rate limit format (mocked) .................. PASS (2ms, 0 tokens)
+
+--- SUITE: Content Assertions (P1) ---------------------------------------------
+
+[03:00:07] TEST T-025a: Return policy contains key facts
+           Request:  POST /v1/chat/completions (temp=0.3, max_tokens=300)
+           Prompt:   "What is the return policy at ShopSmart?"
+           Status:   200 OK
+           Latency:  634ms
+           Tokens:   prompt=44, completion=112, total=156
+           Response: "At ShopSmart, you can return items within **30 days** of your purchase date.
+                     Items need to be in their original condition with tags still attached.
+                     To begin a return, simply visit your order history and select the item.
+
+                     Here are some additional details:
+                     - Sale items and personalized products are non-returnable
+                     - You'll receive a prepaid shipping label within 24 hours
+                     - Refunds are processed within 5-7 business days after we receive your item"
+
+           >>> NOTE: Response now uses markdown bold (**30 days**) and bullet points.
+           >>> Previous model version returned plain text paragraphs.
+
+           Assert:   content contains "30 days" ............................... PASS
+           Assert:   content contains "original condition" .................... PASS
+           Assert:   content does NOT contain "full refund" ................... PASS
+           Result:   PASS (634ms)
+
+[03:00:08] TEST T-025b: Order status uses tool correctly ................ PASS (423ms, 180 tokens)
+[03:00:08] TEST T-026: Response does not contain PII patterns ........... PASS (498ms, 152 tokens)
+
+--- SUITE: Safety Assertions (P1) ----------------------------------------------
+
+[03:00:09] TEST T-040: Safety filter blocks harmful content ............. PASS (182ms, 62 tokens)
+
+--- SUITE: Consistency Checks (P2) - 5-Run Statistical Tests --------------------
+
+[03:00:10] TEST T-103a: Return policy consistency (5 runs)
+           Prompt:   "What is ShopSmart's return policy?"
+           Model:    chatassist-4 (version: chatassist-4-2024-02-10), temp=0.3
+
+           Run 1/5: 200 OK (612ms, 156 tokens) sim=0.81
+           Run 2/5: 200 OK (598ms, 148 tokens) sim=0.78
+           Run 3/5: 200 OK (645ms, 161 tokens) sim=0.76
+           Run 4/5: 200 OK (589ms, 139 tokens) sim=0.79
+           Run 5/5: 200 OK (623ms, 153 tokens) sim=0.74
+
+           >>> QUALITY REGRESSION DETECTED <<<
+           >>> Previous nightly mean similarity: 0.858 (CI #1258, model chatassist-4-2024-01-15)
+           >>> Current mean similarity:          0.776 (this run, model chatassist-4-2024-02-10)
+           >>> Drop: -0.082 (9.5% decline)
+
+           Assert:   Containment "30 days" passes in 5/5 runs ................ PASS
+           Assert:   Containment "original condition" passes in 3/5 runs ...... FAIL (threshold: 4/5)
+           Assert:   Mean similarity >= 0.80 (actual: 0.776) .................. FAIL
+           Assert:   StdDev similarity < 0.15 (actual: 0.025) ................. PASS
+           Result:   FAIL
+
+           >>> ANALYSIS: The new model version (chatassist-4-2024-02-10) produces
+           >>> longer, more structured responses with markdown formatting. The
+           >>> reference text was calibrated against the previous version. The
+           >>> model now says "in their original state" or "items must be unused"
+           >>> instead of "original condition" in 2 of 5 runs.
+
+[03:00:14] TEST T-103b: Ticket classification consistency (5 runs)
+           Prompt:   "Classify: My order hasn't arrived and it's been 2 weeks"
+           Model:    chatassist-4, temp=0.0, structured output
+
+           Run 1/5: category: "shipping", confidence: 0.88
+           Run 2/5: category: "shipping", confidence: 0.86
+           Run 3/5: category: "shipping", confidence: 0.91
+           Run 4/5: category: "shipping", confidence: 0.87
+           Run 5/5: category: "shipping", confidence: 0.89
+
+           >>> NOTE: Confidence scores are slightly lower than previous runs
+           >>> (previous mean: 0.91, current mean: 0.882). Within tolerance.
+
+           Assert:   Category is "shipping" in 5/5 runs ...................... PASS
+           Assert:   Schema valid in 5/5 runs ................................ PASS
+           Assert:   Mean confidence >= 0.80 (actual: 0.882) ................. PASS
+           Result:   PASS
+
+[03:00:17] TEST T-103c: Tool selection consistency (5 runs)
+           Prompt:   "Where is my order ORD-12345?"
+           Model:    chatassist-4, temp=0.3, tools=[lookup_order, check_inventory, create_return]
+
+           Run 1/5: tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 2/5: tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 3/5: tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 4/5: tool: lookup_order, args: {"order_id":"ORD-12345"}
+           Run 5/5: tool: lookup_order, args: {"order_id":"ORD-12345"}
+
+           Assert:   Tool name is "lookup_order" in 5/5 runs ................. PASS
+           Assert:   Argument order_id is "ORD-12345" in 5/5 runs ............ PASS
+           Result:   PASS
+
+--- SUITE: Similarity Assertions (P2) ------------------------------------------
+
+[03:00:19] TEST T-050: Customer greeting similarity
+           Reference: "Hello! Welcome to ShopSmart support. How can I help you today?"
+           Response: "Hi there! Thanks for reaching out to ShopSmart customer support. I'm here to help -- what can I assist you with today?"
+           Similarity: cosine=0.83 (threshold: 0.75)
+           Assert:   similarity >= 0.75 ....................................... PASS
+           Result:   PASS (512ms)
+
+[03:00:20] TEST T-051: Math accuracy in product comparison
+           Reference: "The UltraWidget Pro costs $30.00 more than the BasicWidget."
+           Response: "Let me break that down for you:\n\n- **UltraWidget Pro**: $49.99\n- **BasicWidget**: $19.99\n- **Price difference**: $30.00\n\nThe Pro model is about 2.5x the price of the Basic."
+
+           >>> NOTE: Response now uses markdown formatting (bullets, bold).
+           >>> Previous model version returned plain text.
+
+           Similarity: cosine=0.72 (threshold: 0.75)
+
+           >>> SIMILARITY BELOW THRESHOLD <<<
+           Assert:   similarity >= 0.75 (actual: 0.72) ....................... FAIL
+           Assert:   content contains "$30" ................................... PASS
+
+           RERUN 1/2: Similarity=0.70
+           RERUN 2/2: Similarity=0.69
+
+           Statistical result: 0/3 runs pass threshold (0%, threshold: 66%)
+           Result:   FAIL
+
+           >>> ANALYSIS: The new model version consistently produces markdown-
+           >>> formatted responses for comparison queries. The reference text is
+           >>> plain prose. The FACTUAL content is correct ($30.00), but the
+           >>> FORMAT divergence causes low similarity scores. This is model
+           >>> drift in output format, not a quality issue.
+
+[03:00:22] TEST T-052: Shipping info similarity
+           Reference: "Standard shipping takes 5-7 business days within the continental US."
+           Response: "Standard shipping typically takes **5-7 business days** for delivery within the continental United States. We also offer:\n- Express (2-3 business days)\n- Overnight (next business day)"
+           Similarity: cosine=0.78 (threshold: 0.75)
+           Assert:   similarity >= 0.75 ....................................... PASS
+           Result:   PASS (467ms)
+
+           >>> NOTE: Borderline pass (0.78 vs 0.75 threshold). The model is
+           >>> adding supplementary information beyond the reference. Monitor.
+
+[03:00:23] TEST T-054: Multi-turn context retention ..................... PASS (589ms, 118 tokens)
+
+--- SUITE: Streaming Validation (P2) -------------------------------------------
+
+[03:00:24] TEST T-007: Complete stream received ......................... PASS (1,312ms, 82 tokens)
+
+================================================================================
+RESULTS SUMMARY
+================================================================================
+
+Suite                           Tests    Pass    Fail    Skip    Duration
+---------------------------------------------------------------------------
+Structural Validation (P0)          4       4       0       0       1.659s
+Error Handling (P0)                 3       3       0       0       0.082s
+Content Assertions (P1)             3       3       0       0       1.555s
+Safety Assertions (P1)              1       1       0       0       0.182s
+Consistency Checks (P2)             3       2       1       0       7.345s
+Similarity Assertions (P2)         4       2       2       0       3.891s
+Streaming Validation (P2)          1       1       0       0       1.312s
+---------------------------------------------------------------------------
+TOTAL                              19      16       3       0      16.026s
+
+Token Usage:          5,218 / 200,000 budget (2.6% consumed)
+  Includes retry tokens: 476 (for T-051 reruns)
+Estimated Cost:       $0.021
+Model Version:        chatassist-4-2024-02-10 (CHANGED from chatassist-4-2024-01-15)
+Rate Limit Remaining: 22 / 60 req/min
+
+================================================================================
+QUALITY GATE: FAILED
+================================================================================
+16/19 tests passed. 3 tests failed.
+
+FAILED TESTS:
+  [REGRESSION] T-103a: Return policy consistency
+    - Containment "original condition" passed only 3/5 runs (need 4/5)
+    - Mean similarity dropped from 0.858 to 0.776 (-9.5%)
+    - Root cause: Model now paraphrases "original condition" as "original state" or "unused"
+    - Classification: MODEL DRIFT (#6) - output wording changed
+
+  [REGRESSION] T-051: Math accuracy similarity
+    - Similarity 0.72 (need 0.75), failed all 3 attempts
+    - Root cause: Model now returns markdown-formatted comparisons instead of prose
+    - Factual content ($30.00) is correct -- format divergence lowers similarity
+    - Classification: MODEL DRIFT (#6) - output format changed
+
+  [WARNING] T-052: Shipping info similarity
+    - Passed (0.78) but borderline. Model adds supplementary info.
+    - If format trend continues, this will start failing too.
+
+DRIFT SUMMARY:
+  Model version changed: chatassist-4-2024-01-15 -> chatassist-4-2024-02-10
+  Observed behavior changes:
+    1. Responses now include markdown formatting (bold, bullets, headers)
+    2. Responses are longer and include supplementary information
+    3. Paraphrasing of key terms has increased variation
+    4. Confidence scores in structured output are slightly lower
+    5. Factual accuracy appears unaffected
+
+RECOMMENDED ACTIONS:
+  1. Pin to chatassist-4-2024-01-15 to restore passing tests immediately
+  2. Update reference texts to account for markdown formatting
+  3. Consider using containment + regex instead of similarity for format-sensitive tests
+  4. Run the Deep tier evaluation against both model versions for full comparison
+  5. Update T-103a containment to accept "original condition" OR "original state" OR "unused"
+
+[03:00:25] Uploading test report to artifacts...
+[03:00:25] Uploading regression analysis to dashboard...
+[03:00:25] Sending failure notification to #chatassist-testing Slack channel...
+[03:00:26] Run complete. Total wall time: 25s

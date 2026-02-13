@@ -1,0 +1,15 @@
+# Credentials and tokens
+credentials.json
+token.json
+client_secret_*.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Claude
+.claude/
